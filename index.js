@@ -38,10 +38,12 @@ io.on('connection', async (socket) => {
        * @fixme Set peer connection id for userId in DB.
        * Currently use memory to store and return userId on screencast request.
        */
-      if(!SocketConnections.has(user.id)) {
-        SocketConnections.set(user.id, socket);
-        ack('user registered');
-      }
+      // if(!SocketConnections.has(user.id)) {
+      //   SocketConnections.set(user.id, socket);
+      //   ack('user registered');
+      // }
+      SocketConnections.set(user.id, socket);
+      ack('user registered');
     });
   
     socket.on('disconnect', async (userId) => {
@@ -69,9 +71,15 @@ io.on('connection', async (socket) => {
     });
 
     socket.on('accepted-invite', (peerReq) => {
-      console.log('accepted by socket id ', SocketConnections.get(peerReq['for']).id);
+      console.log('accepted for user', peerReq['for']);
       io.to(SocketConnections.get(peerReq['for']).id).emit('screencast-accepted', peerReq);
-    })
+    });
+
+    socket.on('new-ice-candidate', (request) => {
+      console.log('sharing new ice candidate for', request['for']);
+      io.to(SocketConnections.get(request['for']).id).emit('ice-candidate-received', request);
+    });
+
   });
 
   server.listen(port);
