@@ -46,7 +46,7 @@ io.on('connection', async (socket) => {
       ack('user registered');
     });
   
-    socket.on('disconnect', async (userId) => {
+    socket.on('disconnect-call', async (userId) => {
       try {
         /** @fixme delete the socket and userId from the set in memory. */
         socket.disconnect();
@@ -56,22 +56,13 @@ io.on('connection', async (socket) => {
       }
     });
 
-    // socket.on('screencast', (userId) => {
-    //   /** @fixme send user's peer connection id based on userId. */
-    //   /** @fixme Create individual rooms for each user stream connections for webrtc. */
-    //   io.to(SocketConnections.get(userId)["id"]).emit('request-screencast', {user: userId, admin: SocketConnections.get('2').id}); // @fixme Find a way to only send admin connection.
-    // });
-    // io.to(socket.id).emit('screencast-request', async (userId) => {
-    // console.log(`screencast requested for user id ${userId}, connection id is: `, SocketConnections.get(userId));
-    // await io.to(socket.id).emit('screencast-request', { peerId });
-  
     socket.on('request-screencast-cl', (peerReq) => {
       console.log('requesting for socket id FOR', peerReq['for']);
       io.to(SocketConnections.get(peerReq['for']).id).emit('request-screencast', peerReq);
     });
 
     socket.on('accepted-invite', (peerReq) => {
-      console.log('accepted for user', peerReq['for']);
+      console.log('accepted for user', peerReq['for'], 'by user', peerReq['by']);
       io.to(SocketConnections.get(peerReq['for']).id).emit('screencast-accepted', peerReq);
     });
 
@@ -79,6 +70,11 @@ io.on('connection', async (socket) => {
       console.log('sharing new ice candidate for', request['for']);
       io.to(SocketConnections.get(request['for']).id).emit('ice-candidate-received', request);
     });
+
+    socket.on('negotiation', (peerReq) => {
+      console.log('negotiation request FOR', peerReq['for']);
+      io.to(SocketConnections.get(peerReq['for']).id).emit('request-screencast', peerReq);
+    })
 
   });
 
